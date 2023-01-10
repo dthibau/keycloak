@@ -16,8 +16,8 @@ app.get('/', function(req, res) {
     res.render('index.html');
 });
 
-app.get('/logout', function(req, res) {
-     console.log('Déconnexion req is ' + req);
+app.post('/logout', function(req, res) {
+     console.log('Déconnexion ' + req);
     res.send('<html><body><H1>Vous êtes déconnecté</H1></body></html>');
 });
 
