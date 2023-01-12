@@ -20,7 +20,7 @@ var keycloak = new Keycloak({ store: memoryStore });
 
 app.use(keycloak.middleware());
 
-app.get('/secured', keycloak.protect('realm:USER'), function (req, res) {
+app.get('/secured', keycloak.protect('realm:ROLE_USER'), function (req, res) {
   res.setHeader('content-type', 'text/plain');
   res.send('Secret message!');
 });
