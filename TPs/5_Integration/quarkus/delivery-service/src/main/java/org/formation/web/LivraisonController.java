@@ -2,6 +2,7 @@ package org.formation.web;
 
 import java.util.List;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.ws.rs.DELETE;
@@ -39,6 +40,7 @@ public class LivraisonController {
     @Logged
     @JsonView(Views.Base.class)
     @Blocking
+    @RolesAllowed("user")
 	public Multi<Livraison> findAll() {
     	Log.debug("Reactive call ");
 		return livraisonService.findAll();
@@ -76,6 +78,7 @@ public class LivraisonController {
 
     @POST
     @ResponseStatus(201)
+    @RolesAllowed("admin")
     public Livraison create(@RestQuery String noCommande) {
     	return livraisonService.create(noCommande);
     }
