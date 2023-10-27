@@ -1,0 +1,3 @@
+https://gist.github.com/thomasdarimont/3e87944c31b6263f1849e35733a03500
+
+https://auth0.com/docs/get-started/authentication-and-authorization-flow/call-your-api-using-the-authorization-code-flow-with-pkce
