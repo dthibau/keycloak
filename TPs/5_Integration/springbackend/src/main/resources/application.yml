@@ -1,0 +1,27 @@
+server:
+  port: 8001
+  
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:     # Ou tout simplement issuer-uri
+            issuer-uri: http://localhost:8080/realms/formation
+#            token-uri: http://localhost:8080/realms/formation/protocol/openid-connect/token
+#            authorization-uri: http://localhost:8080/realms/formation/protocol/openid-connect/auth
+##            user-info-uri: http://localhost:8080/auth/realms/formation/protocol/openid-connect/userinfo
+            user-name-attribute: preferred_username
+        registration:
+          springapp:
+            provider: keycloak
+            client-id: springapp
+            client-secret: DLu9KpgY59POm0cbY4k4K0OJBHipd6Co
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
+            scope: openid
+            
+            
+logging:
+  level:
+    '[org.springframework.security]': debug

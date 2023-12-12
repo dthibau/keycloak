@@ -42,21 +42,6 @@ services:
     networks:
       - back
 
-  keycloak2:
-    image: keycloak-formation
-    command: start --optimized
-    environment:
-      KEYCLOAK_ADMIN: "admin"
-      KEYCLOAK_ADMIN_PASSWORD: "admin"
-      KC_HOSTNAME_ADMIN_URL: "https://localhost:8444/"
-      KC_HOSTNAME_DEBUG: true
-    ports:
-      - "8444:8443"
-    depends_on:
-      - keycloak-postgresql
-    networks:
-      - back
-
 volumes:
   keycloak_data:
   keycloak_db:

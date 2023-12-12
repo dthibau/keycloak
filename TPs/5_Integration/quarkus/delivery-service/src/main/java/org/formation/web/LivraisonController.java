@@ -31,6 +31,7 @@ import io.smallrye.mutiny.Multi;
 
 
 @Path("/livraisons")
+@RolesAllowed("admin")
 public class LivraisonController {
 
 	@Inject
@@ -50,6 +51,7 @@ public class LivraisonController {
     @Path("/sync")
     @Logged
     @JsonView(Views.Base.class)
+    @RolesAllowed("user")
 	public List<Livraison> findAllSync() {
     	Log.debug("Sync Call ");
 		return livraisonService.findAllSync();
@@ -59,6 +61,7 @@ public class LivraisonController {
     @Path("/encours")
     @Logged
     @JsonView(Views.Base.class)
+    @RolesAllowed("user")
 	public List<Livraison> findAllEncours() {
     	Log.debug("Encours Call ");
 		return livraisonService.findEncours();
@@ -67,6 +70,7 @@ public class LivraisonController {
     @GET
     @Path("{id}")
     @JsonView(Views.Complet.class)
+    @RolesAllowed("user")
     public Livraison findOne(@RestPath Long id) {
     	return livraisonService.load(Livraison.builder().id(id).build()).orElseThrow(() -> new NotFoundException("No such livraison " + id));
     }
@@ -78,17 +82,10 @@ public class LivraisonController {
 
     @POST
     @ResponseStatus(201)
-    @RolesAllowed("admin")
     public Livraison create(@RestQuery String noCommande) {
     	return livraisonService.create(noCommande);
     }
     
-    @PUT
-    @Path("{id}")
-    @ResponseStatus(204)
-    public void update(@RestPath Long id, @Valid Livraison livraison) {
-    	
-    }
 
     @PUT
     @Path("{id}/start")
@@ -109,11 +106,6 @@ public class LivraisonController {
     	livraisonService.complete(Livraison.builder().id(id).build());
     }
 
-    @DELETE
-    @Path("{id}")
-    @ResponseStatus(204)
-    public void delete(@RestPath Long id) {
-    	
-    }
+
 
 }
