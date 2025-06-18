@@ -1,0 +1,6 @@
+security.provider.1=org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider
+security.provider.2=SUN
+
+# Désactive les algorithmes faibles (ex: SHA1)
+jdk.certpath.disabledAlgorithms=MD2, MD5, SHA1, RSA keySize < 2048, DSA
+jdk.tls.disabledAlgorithms=SSLv3, RC4, MD5withRSA, DH keySize < 2048
