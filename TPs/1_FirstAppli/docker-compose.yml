@@ -16,7 +16,9 @@ services:
     container_name: keycloak
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    command: start
+    command: 
+      - start
+      - --features=scripts
     ports:
       - "8080:8080"
       - "8443:8443" 
@@ -46,6 +48,7 @@ services:
     volumes:
       - ./keycloak-certs:/opt/keycloak/certs:ro
       - ./truststore.jks:/opt/keycloak/truststore.jks
+      - ./theme:/opt/keycloak/themes
     depends_on:
       - postgres
     networks:

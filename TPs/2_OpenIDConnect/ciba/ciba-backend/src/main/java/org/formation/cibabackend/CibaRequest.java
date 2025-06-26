@@ -46,4 +46,15 @@ public class CibaRequest {
     public void setAcr_values(String acr_values) {
         this.acr_values = acr_values;
     }
+
+    @Override
+    public String toString() {
+        return "CibaRequest{" +
+                "login_hint='" + login_hint + '\'' +
+                ", scope='" + scope + '\'' +
+                ", is_consent_required=" + is_consent_required +
+                ", binding_message='" + binding_message + '\'' +
+                ", acr_values='" + acr_values + '\'' +
+                '}';
+    }
 }

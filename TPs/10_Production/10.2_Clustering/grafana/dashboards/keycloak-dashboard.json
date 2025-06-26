@@ -1,0 +1,87 @@
+{
+  "id": null,
+  "title": "Keycloak - Simplified Monitoring",
+  "timezone": "browser",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "HTTP Requests (Count)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_count{job=~\"keycloak-node.*\"}[1m])",
+          "legendFormat": "{{instance}}",
+          "interval": ""
+        }
+      ],
+      "xaxis": {
+        "show": true
+      },
+      "yaxes": [
+        {
+          "format": "ops",
+          "label": "requests/s",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "format": "short",
+          "show": true
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Uptime (seconds)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "process_uptime_seconds{job=~\"keycloak-node.*\"}",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "JVM Heap Used (%)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "(jvm_memory_used_bytes{area=\"heap\",job=~\"keycloak-node.*\"} / jvm_memory_max_bytes{area=\"heap\",job=~\"keycloak-node.*\"}) * 100",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Active Sessions (Estimation)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "base_metrics_user_session_count{job=~\"keycloak-node.*\"}",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0
+        }
+      }
+    }
+  ],
+  "schemaVersion": 30,
+  "version": 1,
+  "refresh": "10s"
+}

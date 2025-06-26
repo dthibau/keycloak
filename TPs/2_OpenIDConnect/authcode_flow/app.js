@@ -18,6 +18,9 @@ app.get('/', function(req, res) {
 
 app.post('/logout', function(req, res) {
      console.log('Déconnexion ' + req);
+     console.log('Déconnexion ', req.headers);
+     console.log('Corps ', req.body);
+   
     res.send('<html><body><H1>Vous êtes déconnecté</H1></body></html>');
 });
 

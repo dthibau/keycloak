@@ -1,0 +1,52 @@
+version: '3'
+services:
+  keycloak-postgresql:
+    image: postgres:14.1
+    volumes:
+      - keycloak_db:/var/lib/postgresql
+      - keycloak_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - back
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5432:5432
+
+  pgadmin4:
+    image: dpage/pgadmin4
+    volumes:
+      - pgadmin4_store:/var/lib/pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin@admin.com"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
+    ports:
+      - "81:80"
+    depends_on:
+      - keycloak-postgresql
+    networks:
+      - back
+
+  keycloak:
+    image: keycloak-formation
+    command: start --optimized
+    environment:
+      KEYCLOAK_ADMIN: "admin"
+      KEYCLOAK_ADMIN_PASSWORD: "admin"
+      
+    ports:
+      - "8443:8443"
+    depends_on:
+      - keycloak-postgresql
+    networks:
+      - back
+
+volumes:
+  keycloak_data:
+  keycloak_db:
+  pgadmin4_store:
+
+networks:
+  back:
+

@@ -1,0 +1,17 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.7
+    container_name: keycloak-spi
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: 
+      - start-dev
+      - --spi-events-listener-sysout-enabled=true 
+    ports:
+      - "8080:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    volumes:
+      - ./providers:/opt/keycloak/providers
+

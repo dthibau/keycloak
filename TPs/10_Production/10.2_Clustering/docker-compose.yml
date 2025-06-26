@@ -1,0 +1,81 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      kcnet:
+        ipv4_address: 172.30.0.10
+
+  keycloak-node1:
+    image: quay.io/keycloak/keycloak:${KC_VERSION}
+    command: start --cache-stack=tcp 
+    environment:
+      KEYCLOAK_ADMIN: ${KC_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
+    volumes:
+      - ./keycloak-node1/keycloak.conf:/opt/keycloak/conf/keycloak.conf
+    depends_on:
+      - postgres
+    networks:
+      kcnet:
+        ipv4_address: 172.30.0.11
+    ports:
+      - "8081:8080"
+      - "10990:10990"  # Pour JGroups diagnostics
+
+  keycloak-node2:
+    image: quay.io/keycloak/keycloak:${KC_VERSION}
+    command: start --cache-stack=tcp
+    environment:
+      KEYCLOAK_ADMIN: ${KC_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
+    volumes:
+      - ./keycloak-node2/keycloak.conf:/opt/keycloak/conf/keycloak.conf
+    depends_on:
+      - postgres
+    networks:
+      kcnet:
+        ipv4_address: 172.30.0.12
+    ports:
+      - "8082:8080"
+      - "11990:10990"
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      kcnet:
+        ipv4_address: 172.30.0.13
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      kcnet:
+        ipv4_address: 172.30.0.14
+
+volumes:
+  pg_data:
+
+networks:
+  kcnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16

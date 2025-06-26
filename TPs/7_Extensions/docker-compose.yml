@@ -1,0 +1,16 @@
+services:
+  keycloak-fips:
+    build:
+      context: .
+      dockerfile: Dockerfile-fips
+    environment:
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      #KC_FEATURES: "fips"
+      JAVA_OPTS_APPEND: >-
+         -Dcom.redhat.fips=true
+         -Djava.security.properties=/opt/keycloak/conf/fips-java.security
+         -cp /opt/keycloak/fips-libs/*
+    command: start-dev
+    ports:
+      - 8080:8080
