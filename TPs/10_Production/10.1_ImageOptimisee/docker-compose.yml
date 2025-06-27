@@ -30,6 +30,9 @@ services:
 
   keycloak:
     image: keycloak-formation
+    build:
+      context: .
+      dockerfile: Dockerfile
     command: start --optimized
     environment:
       KEYCLOAK_ADMIN: "admin"

@@ -29,7 +29,7 @@ app.post('/secure', async (req, res) => {
     if (!payload.cnf || !payload.cnf.jkt) {
       return res.status(401).send('Token is not bound to a DPoP key');
     }
-
+    console.log('cnf:', payload.cnf);
     // 3. Vérifie la preuve DPoP
     const dpopJwt = await jwtVerify(dpopProof, async (header, _token) => {
       // La clé est dans le header DPoP JWT (clé publique du client)
@@ -38,6 +38,7 @@ app.post('/secure', async (req, res) => {
     });
 
     const dpopThumbprint = await calculateThumbprint(dpopJwt.protectedHeader.jwk);
+    console.log('calculated thumbPrint:', dpopThumbprint);
     if (payload.cnf.jkt !== dpopThumbprint) {
       return res.status(401).send('DPoP proof does not match token binding');
     }
