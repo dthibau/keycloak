@@ -1,0 +1,24 @@
+﻿@page
+@model Frontend.Pages.IndexModel
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.Authentication.OpenIdConnect
+
+<h2>Démo OIDC avec Keycloak</h2>
+
+@if (User.Identity?.IsAuthenticated ?? false)
+{
+    <p>Bienvenue @User.Identity.Name !</p>
+    <form method="get" action="/signout">
+        <button type="submit">Se déconnecter</button>
+    </form>
+
+    <p>Réponse de l'API :</p>
+    <pre>@Model.ApiResponse</pre>
+}
+else
+{
+    <form method="get" action="/signin">
+        <button type="submit">Se connecter</button>
+    </form>
+}
