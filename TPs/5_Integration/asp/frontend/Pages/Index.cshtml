@@ -1,20 +1,32 @@
 ﻿@page
 @model Frontend.Pages.IndexModel
-@using Microsoft.AspNetCore.Authentication
-@using Microsoft.AspNetCore.Authentication.Cookies
-@using Microsoft.AspNetCore.Authentication.OpenIdConnect
+@using Microsoft.AspNetCore.Authorization
 
 <h2>Démo OIDC avec Keycloak</h2>
 
 @if (User.Identity?.IsAuthenticated ?? false)
 {
     <p>Bienvenue @User.Identity.Name !</p>
+
+    <h4>Access Token :</h4>
+    <pre>@Model.AccessToken</pre>
+
+    <h4>Access Token (JSON décodé) :</h4>
+    <pre>@Model.AccessTokenJson</pre>
+
+    <form method="post" asp-page-handler="CallApi">
+        <button type="submit">Appeler le backend sécurisé</button>
+    </form>
+
+    @if (!string.IsNullOrEmpty(Model.ApiResponse))
+    {
+        <h4>Réponse de l'API :</h4>
+        <pre>@Model.ApiResponse</pre>
+    }
+
     <form method="get" action="/signout">
         <button type="submit">Se déconnecter</button>
     </form>
-
-    <p>Réponse de l'API :</p>
-    <pre>@Model.ApiResponse</pre>
 }
 else
 {
