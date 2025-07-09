@@ -1,0 +1,44 @@
+
+
+services:
+  ldap:
+    image: osixia/openldap:1.5.0
+    container_name: ldap-server
+    environment:
+      LDAP_ORGANISATION: "CYBERLAB"
+      LDAP_DOMAIN: "cyberlab.local"
+      LDAP_ADMIN_PASSWORD: "admin"
+    ports:
+      - "389:389"
+    volumes:
+      - ./ldap/seed.ldif:/container/service/slapd/assets/config/bootstrap/ldif/50-seed.ldif
+    networks:
+      - keycloak-ldap-net
+
+  phpldapadmin:
+    image: osixia/phpldapadmin:0.9.0
+    container_name: phpldapadmin
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: ldap-server
+    ports:
+      - "6443:443"
+    networks:
+      - keycloak-ldap-net
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.7
+    container_name: keycloak-ldap
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    depends_on:
+      - ldap
+    networks:
+      - keycloak-ldap-net
+
+networks:
+  keycloak-ldap-net:
+    driver: bridge
