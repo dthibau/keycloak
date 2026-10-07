@@ -9,6 +9,7 @@ app.use(stringReplace({
    'SERVICE_URL': SERVICE_URL,
    'KC_URL': KC_URL
 }));
+app.use('/keycloak-js', express.static('node_modules/keycloak-js'));
 app.use(express.static('.'))
 
 app.get('/', function(req, res) {

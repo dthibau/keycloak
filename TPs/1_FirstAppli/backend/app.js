@@ -20,7 +20,17 @@ var keycloak = new Keycloak({ store: memoryStore });
 
 app.use(keycloak.middleware());
 
+// Trace de chaque requête reçue, avec l'utilisateur extrait du jeton s'il y en a un
+app.use(function (req, res, next) {
+  var grant = req.kauth && req.kauth.grant;
+  var user = grant ? grant.access_token.content.preferred_username : 'anonymous';
+  console.log(new Date().toISOString(), req.method, req.url, 'user=' + user);
+  next();
+});
+
 app.get('/secured', keycloak.protect('realm:ROLE_USER'), function (req, res) {
+  var token = req.kauth.grant.access_token.content;
+  console.log('Accès /secured par', token.preferred_username, 'rôles realm:', token.realm_access.roles);
   res.setHeader('content-type', 'text/plain');
   res.send('Secret message!');
 });

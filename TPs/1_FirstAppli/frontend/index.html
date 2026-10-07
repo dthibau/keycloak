@@ -2,7 +2,6 @@
 <html>
 <head>
     <title>Keycloak Example Application</title>
-    <script type="text/javascript" src="KC_URL/js/keycloak.js"></script>
     <script type="text/javascript">
         function output(content) {
             if (typeof content === 'object') {
@@ -35,16 +34,19 @@
             req.send();
         }
 
-        var kc = new Keycloak({ realm: 'formation', clientId: 'frontend' });
-        window.onload = function() {
-            kc.init({'messageReceiveTimeout': 100000}).then(function() {
-                if(kc.authenticated) {
-                    profile();
-                } else {
-                    document.getElementById('anonymous').style.display = 'block';
-                }
-            });
-        }
+    </script>
+    <script type="module">
+        import Keycloak from '/keycloak-js/lib/keycloak.js';
+
+        var kc = new Keycloak({ url: 'KC_URL', realm: 'formation', clientId: 'frontend' });
+        window.kc = kc;
+        kc.init({'messageReceiveTimeout': 100000}).then(function() {
+            if(kc.authenticated) {
+                profile();
+            } else {
+                document.getElementById('anonymous').style.display = 'block';
+            }
+        });
     </script>
 </head>
 <body>
