@@ -12,42 +12,38 @@ services:
       - keycloak-net
 
   keycloak:
-    image: quay.io/keycloak/keycloak:23.0.7
+    image: quay.io/keycloak/keycloak:26.8.0
     container_name: keycloak
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    command: 
+    command:
       - start
-      - --features=scripts
+      - --features=scripts,dpop
     ports:
       - "8080:8080"
-      - "8443:8443" 
+      - "8443:8443"
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_DB: postgres
       KC_DB_URL_HOST: postgres
       KC_DB_URL_DATABASE: keycloak
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: secret
-      KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/certs/keystore.p12
-      KC_HTTPS_CERTIFICATE_KEY_STORE_PASSWORD: changeit
-      KC_HTTPS_CERTIFICATE_KEY_STORE_FILE: /opt/keycloak/certs/keystore.p12
-      KC_HTTPS_CERTIFICATE_KEY_STORE_TYPE: PKCS12
+      # HTTPS via keystore PKCS12
+      KC_HTTPS_KEY_STORE_FILE: /opt/keycloak/certs/keystore.p12
       KC_HTTPS_KEY_STORE_PASSWORD: changeit
       KC_HTTPS_KEY_STORE_TYPE: PKCS12
-      KC_HTTPS_KEY_STORE_FILE: /opt/keycloak/certs/keystore.p12
-      KC_HOSTNAME_STRICT: "false"
-      KC_HTTP_ENABLED: "true"   # pour accéder aussi en HTTP si tu veux
-      # Authenticator X509 pour browser Flow
-      KC_SPI_AUTHENTICATOR_X509_CLIENT_CERTIFICATE_ENABLED: true
-      JAVA_OPTS_APPEND: -Djavax.net.ssl.trustStore=/opt/keycloak/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit
+      # Authentification par certificat client (X509)
       KC_HTTPS_CLIENT_AUTH: request
+      KC_HTTPS_TRUST_STORE_FILE: /opt/keycloak/truststore.jks
+      KC_HTTPS_TRUST_STORE_PASSWORD: changeit
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"   # pour accéder aussi en HTTP
       KC_LOG_LEVEL: info,org.keycloak.authentication:trace,org.apache.http.wire:trace
-      KC_FEATURES: dpop
     volumes:
       - ./keycloak-certs:/opt/keycloak/certs:ro
-      - ./truststore.jks:/opt/keycloak/truststore.jks
+      - ./truststore.jks:/opt/keycloak/truststore.jks:ro
       - ./theme:/opt/keycloak/themes
     depends_on:
       - postgres
@@ -55,7 +51,7 @@ services:
       - keycloak-net
 
   pgadmin:
-    image: dpage/pgadmin4
+    image: dpage/pgadmin4:9
     container_name: pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
