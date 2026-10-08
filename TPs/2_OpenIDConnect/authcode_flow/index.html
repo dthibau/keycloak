@@ -2,7 +2,6 @@
 <html>
 <head>
     <title>OpenID Connect Playground</title>
-    <script type="text/javascript" src="KC_URL/js/keycloak.js"></script>
     <script type="text/javascript" src="client.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -39,12 +38,15 @@
         <label>scope</label><input id="input-scope" value="openid"><br/>
         <label>prompt</label><input id="input-prompt" value=""><br/>
         <label>max_age</label><input id="input-maxage" value=""><br/>
-        <label>login_hint</label><input id="input-loginhint" value="">
+        <label>login_hint</label><input id="input-loginhint" value=""><br/>
+        <label>PKCE (S256)</label><input id="input-pkce" type="checkbox" checked style="width: auto">
     </p>
     <p>
         <button onclick="generateAuthenticationRequest()">Generate Authentication Request</button>
     </p>
     <hr/>
+    <h3>Paramètres de sécurité</h3>
+    <pre id="output-securityParams"></pre>
     <h3>Authentication Request</h3>
     <pre id="output-authenticationRequest"></pre>
     <button id="authenticationRequestLink">Send Authentication Request</button>

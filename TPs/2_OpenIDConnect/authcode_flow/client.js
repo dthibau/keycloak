@@ -19,7 +19,7 @@ function loadDiscovery() {
 }
 
 // Create an Authentication Request
-function generateAuthenticationRequest() {
+async function generateAuthenticationRequest() {
     var req = state.discovery['authorization_endpoint'];
 
     var clientId = getInput('input-clientid');
@@ -28,14 +28,35 @@ function generateAuthenticationRequest() {
     var maxAge = getInput('input-maxage');
     var loginHint = getInput('input-loginhint');
 
+    var usePkce = document.getElementById('input-pkce').checked;
+
     var authenticationInput = {
         clientId: clientId,
         scope: scope,
         prompt: prompt,
         maxAge: maxAge,
-        loginHint: loginHint
+        loginHint: loginHint,
+        usePkce: usePkce
     }
     setState('authenticationInput', authenticationInput);
+
+    // Paramètres de sécurité générés par le client
+    var security = {
+        state: generateRandomString(16),
+        nonce: generateRandomString(16)
+    };
+    if (usePkce) {
+        security.codeVerifier = generateRandomString(32);
+        security.codeChallenge = await pkceChallenge(security.codeVerifier);
+    }
+    setState('security', security);
+    setOutput('output-securityParams',
+        'state (anti-CSRF, renvoyé tel quel dans la réponse) : ' + security.state + '<br/>' +
+        'nonce (sera présent dans le jeton d\'identification) : ' + security.nonce + '<br/>' +
+        (usePkce
+            ? 'code_verifier (secret conservé par le client) : ' + security.codeVerifier + '<br/>' +
+              'code_challenge = base64url(sha256(code_verifier)) : ' + security.codeChallenge
+            : 'PKCE désactivé : pas de code_verifier / code_challenge'));
 
     req += '?client_id=' + clientId;
     req += '&response_type=code';
@@ -51,6 +72,12 @@ function generateAuthenticationRequest() {
     }
     if ('' !== loginHint) {
         req += '&login_hint=' + loginHint;
+    }
+    req += '&state=' + security.state;
+    req += '&nonce=' + security.nonce;
+    if (usePkce) {
+        req += '&code_challenge=' + security.codeChallenge;
+        req += '&code_challenge_method=S256';
     }
 
     setOutput('output-authenticationRequest', req.replace('?', '<br/><br/>').replaceAll('&', '<br/>'));
@@ -68,6 +95,9 @@ function loadTokens() {
     params += '&code=' + code;
     params += '&client_id=' + clientId;
     params += '&redirect_uri=' + document.location.href.split('?')[0];
+    if (state.security && state.security.codeVerifier) {
+        params += '&code_verifier=' + state.security.codeVerifier;
+    }
 
     var req = new XMLHttpRequest();
     req.onreadystatechange = function() {
@@ -204,6 +234,7 @@ function step(step) {
                 setInput('input-prompt', authenticationInput.prompt);
                 setInput('input-maxage', authenticationInput.maxAge);
                 setInput('input-loginhint', authenticationInput.loginHint);
+                document.getElementById('input-pkce').checked = authenticationInput.usePkce !== false;
                 setOutput('output-authenticationResponse', '');
             }
             break;
@@ -238,6 +269,28 @@ function getQueryVariable(key) {
     }
 }
 
+// Chaîne aléatoire encodée en base64url (utilisée pour state, nonce et code_verifier)
+function generateRandomString(byteLength) {
+    var bytes = new Uint8Array(byteLength);
+    crypto.getRandomValues(bytes);
+    return base64UrlEncode(bytes);
+}
+
+// code_challenge PKCE = base64url(sha256(code_verifier)), méthode S256
+async function pkceChallenge(codeVerifier) {
+    var data = new TextEncoder().encode(codeVerifier);
+    var digest = await crypto.subtle.digest('SHA-256', data);
+    return base64UrlEncode(new Uint8Array(digest));
+}
+
+function base64UrlEncode(bytes) {
+    var binary = '';
+    for (var i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
 function base64UrlDecode(input) {
     input = input
         .replace(/-/g, '+')
@@ -263,7 +316,16 @@ function init() {
     var code = getQueryVariable('code');
     if (code) {
         setInput('input-code', code);
-        setOutput('output-authenticationResponse', 'code=' + code);
+        var receivedState = getQueryVariable('state');
+        var stateCheck;
+        if (!receivedState) {
+            stateCheck = 'aucun state reçu';
+        } else if (state.security && receivedState === state.security.state) {
+            stateCheck = 'OK, identique au state envoyé';
+        } else {
+            stateCheck = 'ATTENTION, différent du state envoyé (' + (state.security ? state.security.state : 'inconnu') + ')';
+        }
+        setOutput('output-authenticationResponse', 'code=' + code + '<br/>state=' + receivedState + '<br/><br/>Vérification du state : ' + stateCheck);
     }
 
     var error = getQueryVariable('error');
