@@ -20,7 +20,41 @@ var keycloak = new Keycloak({ store: memoryStore });
 
 app.use(keycloak.middleware());
 
-app.get('/secured', keycloak.protect('scope:email'), function (req, res) {
+// Trace de chaque requête reçue, avec les claims utiles du jeton s'il y en a un
+app.use(function (req, res, next) {
+  var grant = req.kauth && req.kauth.grant;
+  if (grant) {
+    var token = grant.access_token.content;
+    console.log(new Date().toISOString(), req.method, req.url,
+      'user=' + token.preferred_username, 'scope=[' + token.scope + ']', 'aud=' + JSON.stringify(token.aud));
+  } else if (req.headers.authorization) {
+    // Un jeton a été envoyé mais keycloak-connect l'a rejeté silencieusement :
+    // on rejoue la validation pour tracer la raison (audience, expiration, signature...)
+    var raw = req.headers.authorization.replace(/^Bearer /i, '');
+    return keycloak.grantManager.createGrant({ access_token: raw })
+      .then(function () { next(); })
+      .catch(function (err) {
+        console.log(new Date().toISOString(), req.method, req.url, 'jeton présent mais rejeté :', err.message);
+        next();
+      });
+  } else {
+    console.log(new Date().toISOString(), req.method, req.url, 'user=anonymous (pas de jeton)');
+  }
+  next();
+});
+
+// Garde vérifiant la présence d'un scope dans le claim "scope" du jeton d'accès.
+// keycloak.protect('xxx') ne connaît que les rôles, d'où cette fonction.
+function requireScope(scope) {
+  return function (token) {
+    var scopes = (token.content.scope || '').split(' ');
+    return scopes.includes(scope);
+  };
+}
+
+app.get('/secured', keycloak.protect(requireScope('email')), function (req, res) {
+  var token = req.kauth.grant.access_token.content;
+  console.log('Accès /secured autorisé pour', token.preferred_username, '- scopes :', token.scope);
   res.setHeader('content-type', 'text/plain');
   res.send('Secret message!');
 });
