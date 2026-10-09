@@ -2,7 +2,6 @@
 <html>
 <head>
     <title>Keycloak Example Application</title>
-    <script type="text/javascript" src="KC_URL/js/keycloak.js"></script>
     <script type="text/javascript">
         function output(content) {
             if (typeof content === 'object') {
@@ -28,14 +27,18 @@
                 }
             }
             req.open('GET', 'SERVICE_URL', true);
-            // Ajouter le jeton dans la requête
+            // Rafraîchir le jeton si nécessaire (updateToken) puis l'ajouter dans la requête
 
             req.send();
         }
+    </script>
+    <script type="module">
+        // keycloak-js est fourni par le paquet npm (plus servi par le serveur Keycloak depuis la version 26)
+        import Keycloak from '/keycloak-js/lib/keycloak.js';
 
-        // Instancier puis initialiser Keycloak, en cas d'authentification réussie, appeler profile()
+        // Instancier Keycloak (url, realm, clientId ou fichier keycloak.json), l'exposer dans window.keycloak,
+        // puis l'initialiser : en cas d'authentification réussie, appeler profile()
 
-        
     </script>
 </head>
 <body>

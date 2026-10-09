@@ -1,0 +1,52 @@
+# Atelier 10.2 – étape 1 : Keycloak mono-nœud, base PostgreSQL, TLS direct
+#   https://localhost:8443  : Keycloak
+#   https://localhost:9000  : interface de management (health, metrics)
+#   http://localhost:81     : pgAdmin
+services:
+  keycloak-postgresql:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4:9
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@formation.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "81:80"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.0
+    command: ["start"]
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    volumes:
+      - ./conf/keycloak.conf:/opt/keycloak/conf/keycloak.conf:ro
+      - ./certs:/opt/keycloak/certs:ro
+    ports:
+      - "8443:8443"
+      - "9000:9000"
+    depends_on:
+      keycloak-postgresql:
+        condition: service_healthy
+
+  # outil pour appeler Keycloak depuis le réseau Docker (étape 4)
+  curl:
+    image: curlimages/curl:8.15.0
+    profiles: ["tools"]
+    entrypoint: ["curl"]
+
+volumes:
+  pgdata:

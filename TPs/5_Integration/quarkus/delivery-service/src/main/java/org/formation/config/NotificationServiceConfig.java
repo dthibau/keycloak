@@ -1,6 +1,6 @@
 package org.formation.config;
 
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 
 import org.hibernate.validator.constraints.URL;
 

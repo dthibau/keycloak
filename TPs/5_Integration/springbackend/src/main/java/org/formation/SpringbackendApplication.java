@@ -1,78 +1,56 @@
 package org.formation;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import jakarta.servlet.http.HttpSession;
 
 @SpringBootApplication
 @RestController
 public class SpringbackendApplication {
 
-	@Autowired
-	KeycloakLogoutHandler keycloakLogoutHandler;
-	
-	@Autowired
-	OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
-	
 	public static void main(String[] args) {
 		SpringApplication.run(SpringbackendApplication.class, args);
 	}
 
 	@Bean
-	public SecurityFilterChain securitygWebFilterChain(HttpSecurity http) throws Exception {
-	    return http.authorizeHttpRequests(auth -> auth.requestMatchers("/oidc-principal").hasAuthority("OIDC_USER").anyRequest().authenticated())
-	      .oauth2Login(Customizer.withDefaults())
-	      .csrf(csrf -> csrf.disable())
-	      .logout(logout -> logout.logoutUrl("/logout").addLogoutHandler(keycloakLogoutHandler).invalidateHttpSession(true).logoutSuccessUrl("/"))
-	      .build();
+	SecurityFilterChain securityFilterChain(HttpSecurity http, ClientRegistrationRepository clientRegistrationRepository) throws Exception {
+		return http
+			.authorizeHttpRequests(auth -> auth
+				.requestMatchers("/").permitAll()
+				.requestMatchers("/oidc-principal").hasAuthority("OIDC_USER")
+				.anyRequest().authenticated())
+			// Login OpenID Connect avec le client "springapp" déclaré dans application.yml
+			.oauth2Login(Customizer.withDefaults())
+			// 5.2.1 : ajouter ici la déconnexion RP-initiated (logout + OidcClientInitiatedLogoutSuccessHandler)
+			// puis le back-channel logout (oidcLogout)
+			.csrf(csrf -> csrf.disable())
+			.build();
 	}
-	
 
+	@GetMapping("/")
+	public String home() {
+		return "Application Spring MVC sécurisée par Keycloak. Endpoints : /oidc-principal, /access-token, /logout";
+	}
+
+	// Utilisateur OpenID Connect authentifié : claims du jeton d'identification et autorités Spring
 	@GetMapping("/oidc-principal")
-	public OidcUser getOidcUserPrincipal(
-	  @AuthenticationPrincipal OidcUser principal) {
-		
-	    return principal;
+	public OidcUser getOidcUserPrincipal(@AuthenticationPrincipal OidcUser principal) {
+		return principal;
 	}
+
+	// Jeton d'accès obtenu lors du login, à propager vers un service protégé
 	@GetMapping("/access-token")
-	public String getAccessToken() {
-		OAuth2AuthenticationToken oauthToken  =
-				(OAuth2AuthenticationToken)
-			    SecurityContextHolder
-			        .getContext()
-			        .getAuthentication();
-
-
-			
-			OAuth2AuthorizedClient client =
-					oAuth2AuthorizedClientService.loadAuthorizedClient(
-				            oauthToken.getAuthorizedClientRegistrationId(),
-				            oauthToken.getName());
-
-			return client.getAccessToken().getTokenValue();
-			
-	}
-	
-	@PostMapping("/sso-logout")
-	public void ssoLogout(@RequestParam("logout_token") String logoutToken, HttpSession session) {
-		
-	    session.invalidate();
+	public String getAccessToken(@RegisteredOAuth2AuthorizedClient("springapp") OAuth2AuthorizedClient client) {
+		return client.getAccessToken().getTokenValue();
 	}
 }

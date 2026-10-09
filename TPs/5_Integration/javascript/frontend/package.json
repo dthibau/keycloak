@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "express": "^4.17.1",
+    "keycloak-js": "^26.2.4",
     "start": "^5.1.0",
     "string-replace-middleware": "^1.0.2"
   }

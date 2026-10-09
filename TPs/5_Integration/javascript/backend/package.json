@@ -1,13 +1,16 @@
 {
   "name": "keycloak-example-service",
   "version": "0.0.1",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node app.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "express-session": "^1.17.1",
-    "keycloak-connect": "^11.0.3"
+    "jose": "^6.2.12"
   }
 }

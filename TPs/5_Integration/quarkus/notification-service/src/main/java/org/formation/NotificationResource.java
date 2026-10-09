@@ -1,8 +1,9 @@
 package org.formation;
 
-import javax.inject.Inject;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
 
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
@@ -10,6 +11,7 @@ import io.quarkus.mailer.reactive.ReactiveMailer;
 import io.smallrye.mutiny.Uni;
 
 @Path("/notifications")
+@RolesAllowed("admin")
 public class NotificationResource {
 
 	@Inject Mailer mailer;     

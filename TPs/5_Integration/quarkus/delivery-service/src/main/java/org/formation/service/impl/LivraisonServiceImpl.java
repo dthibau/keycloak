@@ -5,12 +5,12 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.transaction.Transactional;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.transaction.Transactional;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
@@ -25,7 +25,6 @@ import org.formation.service.LivraisonService;
 import org.formation.service.NotificationService;
 
 import io.quarkus.logging.Log;
-import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Multi;
 
 @ApplicationScoped
@@ -46,7 +45,6 @@ public class LivraisonServiceImpl implements LivraisonService {
 		
 	@SuppressWarnings("unchecked")
 	@Override
-	@Blocking
 	public Multi<Livraison> findAll() {
 		Query query = em.createQuery("from Livraison");
 		return Multi.createFrom().items(query.getResultStream()); 
