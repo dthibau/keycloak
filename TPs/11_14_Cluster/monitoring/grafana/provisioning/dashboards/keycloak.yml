@@ -1,8 +1,7 @@
 apiVersion: 1
-
 providers:
-  - name: 'keycloak'
-    folder: ''
+  - name: keycloak
+    folder: Keycloak
     type: file
     options:
       path: /var/lib/grafana/dashboards

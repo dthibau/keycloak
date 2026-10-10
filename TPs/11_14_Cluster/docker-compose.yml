@@ -1,0 +1,118 @@
+# Cluster Keycloak à 2 nœuds (ateliers 11 à 14)
+#   http://localhost:8080  : accès public (via HAProxy)
+#   http://localhost:8081  : console d'administration (via HAProxy)
+#   http://localhost:8404  : statistiques HAProxy
+#   http://localhost:9001 / 9002 : interface de management de kc1 / kc2
+#   http://localhost:8025  : Mailpit
+#   http://localhost:9090 / 3000 : Prometheus / Grafana (profil monitoring)
+
+x-keycloak: &keycloak
+  build:
+    context: .
+    args:
+      KC_VERSION: ${KC_VERSION}
+  image: keycloak-cluster:${KC_VERSION}
+  # start (et non start --optimized) : permet de changer des options de build pendant les ateliers
+  command: ["start"]
+  # HTTP derrière HAProxy (sans TLS pour simplifier les ateliers) ; options de build dans le Dockerfile
+  environment:
+    KC_DB_URL_HOST: keycloak-postgresql
+    KC_DB_URL_DATABASE: keycloak
+    KC_DB_USERNAME: keycloak
+    KC_DB_PASSWORD: ${DB_PASSWORD}
+    KC_HOSTNAME: http://localhost:8080
+    KC_HOSTNAME_ADMIN: http://localhost:8081
+    KC_HTTP_ENABLED: "true"
+    KC_PROXY_HEADERS: xforwarded
+    KC_PROXY_TRUSTED_ADDRESSES: 172.16.0.0/12,192.168.0.0/16,10.0.0.0/8
+    KC_BOOTSTRAP_ADMIN_USERNAME: admin
+    KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    KC_VAULT_DIR: /opt/keycloak/vault
+    KC_SHUTDOWN_DELAY: 5s
+  volumes:
+    - ./vault:/opt/keycloak/vault:ro
+    - ./upgrade:/upgrade
+  depends_on:
+    keycloak-postgresql:
+      condition: service_healthy
+
+services:
+  keycloak-postgresql:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  kc1:
+    <<: *keycloak
+    hostname: kc1
+    # seul kc1 importe le realm cluster-lab au premier démarrage
+    command: ["start", "--import-realm"]
+    volumes:
+      - ./vault:/opt/keycloak/vault:ro
+      - ./upgrade:/upgrade
+      - ./import:/opt/keycloak/data/import:ro
+    ports:
+      - "9001:9000"
+
+  kc2:
+    <<: *keycloak
+    hostname: kc2
+    ports:
+      - "9002:9000"
+
+  # nœud supplémentaire, démarré en 13.1 : docker compose --profile scale up -d kc3
+  kc3:
+    <<: *keycloak
+    hostname: kc3
+    profiles: ["scale"]
+    ports:
+      - "9003:9000"
+
+  haproxy:
+    image: haproxy:3.0
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+      - "8404:8404"
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+
+  mailpit:
+    image: axllent/mailpit
+    environment:
+      MP_SMTP_AUTH: "keycloak:S3cr3t"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+    ports:
+      - "8025:8025"
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    profiles: ["monitoring"]
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:12.1.1
+    profiles: ["monitoring"]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
