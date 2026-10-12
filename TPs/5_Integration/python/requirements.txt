@@ -1,0 +1,6 @@
+flask
+authlib
+requests
+fastapi
+uvicorn
+pyjwt[crypto]

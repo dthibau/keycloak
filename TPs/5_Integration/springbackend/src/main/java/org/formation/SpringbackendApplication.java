@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.SecurityFilterChain;
@@ -24,6 +25,12 @@ public class SpringbackendApplication {
 
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http, ClientRegistrationRepository clientRegistrationRepository) throws Exception {
+		// Déconnexion RP-initiated (OpenID Connect RP-Initiated Logout) : après la déconnexion locale,
+		// le navigateur est redirigé vers le end session endpoint de Keycloak avec id_token_hint,
+		// puis Keycloak renvoie vers post_logout_redirect_uri.
+		var oidcLogoutSuccessHandler = new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository);
+		oidcLogoutSuccessHandler.setPostLogoutRedirectUri("{baseUrl}/");
+
 		return http
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers("/").permitAll()
@@ -31,8 +38,10 @@ public class SpringbackendApplication {
 				.anyRequest().authenticated())
 			// Login OpenID Connect avec le client "springapp" déclaré dans application.yml
 			.oauth2Login(Customizer.withDefaults())
-			// 5.2.1 : ajouter ici la déconnexion RP-initiated (logout + OidcClientInitiatedLogoutSuccessHandler)
-			// puis le back-channel logout (oidcLogout)
+			// Back-channel logout : Keycloak notifie l'application sur
+			// POST /logout/connect/back-channel/springapp et la session HTTP correspondante est invalidée
+			.oidcLogout(oidc -> oidc.backChannel(Customizer.withDefaults()))
+			.logout(logout -> logout.logoutSuccessHandler(oidcLogoutSuccessHandler))
 			.csrf(csrf -> csrf.disable())
 			.build();
 	}

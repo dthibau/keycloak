@@ -5,12 +5,14 @@ import jakarta.ws.rs.Path;
 
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
+import io.quarkus.oidc.token.propagation.common.AccessToken;
 import io.smallrye.mutiny.Uni;
 
-// 5.3.1 : ajouter l'annotation @AccessToken (io.quarkus.oidc.token.propagation.common.AccessToken)
-// pour propager le jeton d'accès reçu vers notification-service
+// @AccessToken : le jeton d'accès de la requête entrante est propagé dans l'en-tête Authorization
+// des appels sortants (extension quarkus-rest-client-oidc-token-propagation)
 @Path("/notifications")
 @RegisterRestClient(configKey = "notification-api")
+@AccessToken
 public interface NotificationService {
 
 	@POST
