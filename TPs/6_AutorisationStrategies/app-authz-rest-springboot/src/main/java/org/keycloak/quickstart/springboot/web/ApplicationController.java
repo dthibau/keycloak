@@ -1,54 +1,38 @@
-/*
- * JBoss, Home of Professional Open Source
- *
- * Copyright 2017 Red Hat, Inc. and/or its affiliates.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
 package org.keycloak.quickstart.springboot.web;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * @author <a href="mailto:psilva@redhat.com">Pedro Igor</a>
+ * Les chemins /api/... ne portent aucune annotation de sécurité : les autorisations sont
+ * définies dans Keycloak (onglet Authorization du client) et appliquées par le policy enforcer.
  */
 @RestController
 public class ApplicationController {
 
-    @RequestMapping(value = "/api/resourcea", method = RequestMethod.GET)
-    public String handleResourceA() {
-        return createResponse();
+    @GetMapping("/api/resourcea")
+    public String handleResourceA(@AuthenticationPrincipal Jwt jwt) {
+        return createResponse(jwt);
     }
 
-    @RequestMapping(value = "/api/resourceb", method = RequestMethod.GET)
-    public String handleResourceB() {
-        return createResponse();
+    @GetMapping("/api/resourceb")
+    public String handleResourceB(@AuthenticationPrincipal Jwt jwt) {
+        return createResponse(jwt);
     }
 
-    @RequestMapping(value = "/api/premium", method = RequestMethod.GET)
-    public String handlePremiumResource() {
-        return createResponse();
+    @GetMapping("/api/premium")
+    public String handlePremiumResource(@AuthenticationPrincipal Jwt jwt) {
+        return createResponse(jwt);
     }
 
-    @RequestMapping(value = "/api/admin", method = RequestMethod.GET)
-    public String handleAdminResource() {
-        return createResponse();
+    @GetMapping("/api/admin")
+    public String handleAdminResource(@AuthenticationPrincipal Jwt jwt) {
+        return createResponse(jwt);
     }
 
-    private String createResponse() {
-        return "Access Granted";
+    private String createResponse(Jwt jwt) {
+        return "Access Granted (" + jwt.getClaimAsString("preferred_username") + ")";
     }
 }

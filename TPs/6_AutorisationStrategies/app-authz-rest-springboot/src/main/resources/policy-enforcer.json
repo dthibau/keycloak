@@ -1,0 +1,9 @@
+{
+  "realm": "spring-boot-quickstart",
+  "auth-server-url": "http://localhost:8080",
+  "resource": "app-authz-rest-springboot",
+  "credentials": {
+    "secret": "secret"
+  },
+  "lazy-load-paths": true
+}

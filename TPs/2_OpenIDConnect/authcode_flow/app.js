@@ -26,8 +26,8 @@ app.post('/logout', express.urlencoded({ extended: false }), function(req, res) 
     var logoutToken = req.body && req.body.logout_token;
     if (logoutToken) {
         var parts = logoutToken.split('.');
-        var header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
-        var claims = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+        var header = JSON.parse(decodeBase64Url(parts[0]));
+        var claims = JSON.parse(decodeBase64Url(parts[1]));
         console.log('logout_token header :', header);
         console.log('logout_token claims :', claims);
         console.log('Session Keycloak à fermer (sid) :', claims.sid, '- utilisateur (sub) :', claims.sub);
@@ -39,5 +39,15 @@ app.post('/logout', express.urlencoded({ extended: false }), function(req, res) 
     res.status(200).send('<html><body><H1>Vous êtes déconnecté</H1></body></html>');
 });
 
+
+// Décodage base64url (alphabet URL-safe, sans padding) compatible avec toutes les versions de Node.js
+// (l'encodage 'base64url' de Buffer n'existe qu'à partir de Node 14.18 / 15.7)
+function decodeBase64Url(input) {
+    var base64 = input.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4 !== 0) {
+        base64 += '=';
+    }
+    return Buffer.from(base64, 'base64').toString('utf8');
+}
 
 app.listen(8000);

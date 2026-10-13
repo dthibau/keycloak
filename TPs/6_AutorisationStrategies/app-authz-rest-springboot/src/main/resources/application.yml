@@ -1,0 +1,14 @@
+server:
+  port: 8180
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Spring Security récupère la configuration OpenID Connect du realm (JWKS, issuer)
+          issuer-uri: http://localhost:8080/realms/spring-boot-quickstart
+
+logging:
+  level:
+    org.keycloak: DEBUG
