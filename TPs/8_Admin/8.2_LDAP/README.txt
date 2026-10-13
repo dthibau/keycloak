@@ -5,12 +5,12 @@ Ce projet contient une stack prête à l'emploi pour tester la synchronisation e
 ## 🔧 Lancer le projet
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ## 🌍 Accès
 
-- Keycloak : http://localhost:8080  
+- Keycloak 26.8.1 (mode dev, base PostgreSQL) : http://localhost:8080  
   - Identifiants admin : `admin / admin`
 - phpLDAPadmin : https://localhost:6443  
   - Login : `cn=admin,dc=cyberlab,dc=local`  
@@ -18,7 +18,7 @@ docker-compose up -d
 
 ## 📁 Fichier LDAP injecté
 
-Le fichier `ldap/seed.ldif` contient 10 utilisateurs répartis dans les groupes suivants :
+Le fichier `ldap/bootstrap.ldif` contient 10 utilisateurs (`user1` à `user10`, mot de passe `password`) répartis dans les groupes suivants :
 
 - HMN_Biologistes
 - HMN_Cliniciens
